@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simplificador de EPUB</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-book-open"></i> ClariBook</h1>
+            <p>Transforme seus livros em versões mais acessíveis com IA</p>
+        </header>
+
+        <main class="main-content">
+            <!-- Seção de Upload -->
+            <section class="upload-section" id="uploadSection">
+                <div class="upload-card">
+                    <div class="upload-area" id="uploadArea">
+                        <i class="fas fa-cloud-upload-alt upload-icon"></i>
+                        <h3>Envie seu arquivo EPUB</h3>
+                        <p>Arraste e solte ou clique para selecionar</p>
+                        <input type="file" id="fileInput" accept=".epub" hidden>
+                        <button class="upload-btn" onclick="document.getElementById('fileInput').click()">
+                            Escolher Arquivo
+                        </button>
+                    </div>
+                    
+                    <div class="file-info" id="fileInfo" style="display: none;">
+                        <div class="file-details">
+                            <i class="fas fa-file-alt"></i>
+                            <div>
+                                <h4 id="fileName"></h4>
+                                <p id="fileStats"></p>
+                            </div>
+                        </div>
+                        <button class="remove-file" onclick="removeFile()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Seção de Configuração -->
+            <section class="config-section" id="configSection" style="display: none;">
+                <div class="config-card">
+                    <h3><i class="fas fa-cogs"></i> Escolha o Nível de Simplificação</h3>
+                    
+                    <div class="level-options">
+                        <div class="level-option" data-level="1">
+                            <div class="level-header">
+                                <input type="radio" name="level" value="1" id="level1">
+                                <label for="level1">
+                                    <span class="level-number">1</span>
+                                    <span class="level-name">Muito Simples</span>
+                                </label>
+                            </div>
+                            <p class="level-description">
+                                Frases curtas e vocabulário acessível. Ideal para iniciantes ou leitores com dificuldades.
+                            </p>
+                        </div>
+
+                        <div class="level-option" data-level="2">
+                            <div class="level-header">
+                                <input type="radio" name="level" value="2" id="level2" checked>
+                                <label for="level2">
+                                    <span class="level-number">2</span>
+                                    <span class="level-name">Médio</span>
+                                </label>
+                            </div>
+                            <p class="level-description">
+                                Linguagem clara mantendo parte da riqueza literária. Equilibrio entre simplicidade e qualidade.
+                            </p>
+                        </div>
+
+                        <div class="level-option" data-level="3">
+                            <div class="level-header">
+                                <input type="radio" name="level" value="3" id="level3">
+                                <label for="level3">
+                                    <span class="level-number">3</span>
+                                    <span class="level-name">Comum</span>
+                                </label>
+                            </div>
+                            <p class="level-description">
+                                Pequenas simplificações para melhorar fluidez. Mantém quase toda a riqueza original.
+                            </p>
+                        </div>
+                    </div>
+
+                    <button class="process-btn" id="processBtn" onclick="startProcessing()">
+                        <i class="fas fa-magic"></i>
+                        Iniciar Simplificação
+                    </button>
+                </div>
+            </section>
+
+            <!-- Seção de Progresso -->
+            <section class="progress-section" id="progressSection" style="display: none;">
+                <div class="progress-card">
+                    <h3><i class="fas fa-spinner fa-spin"></i> Processando seu livro...</h3>
+                    
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progressFill"></div>
+                    </div>
+                    
+                    <div class="progress-info">
+                        <p id="progressMessage">Iniciando processamento...</p>
+                        <p id="progressStats"></p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Seção de Resultado -->
+            <section class="result-section" id="resultSection" style="display: none;">
+                <div class="result-card">
+                    <div class="success-icon">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                    <h3>Simplificação Concluída!</h3>
+                    <p>Seu livro foi processado com sucesso.</p>
+                    
+                    <div class="result-actions">
+                        <button class="download-btn" id="downloadBtn">
+                            <i class="fas fa-download"></i>
+                            Baixar EPUB Simplificado
+                        </button>
+                        
+                        <button class="new-file-btn" onclick="resetApp()">
+                            <i class="fas fa-plus"></i>
+                            Processar Novo Arquivo
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Seção de Erro -->
+            <section class="error-section" id="errorSection" style="display: none;">
+                <div class="error-card">
+                    <div class="error-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h3>Erro no Processamento</h3>
+                    <p id="errorMessage">Ocorreu um erro durante o processamento.</p>
+                    
+                    <button class="retry-btn" onclick="resetApp()">
+                        <i class="fas fa-redo"></i>
+                        Tentar Novamente
+                    </button>
+                </div>
+            </section>
+        </main>
+
+        <footer class="footer">
+            <p>Simplificador de EPUB - Tornando a leitura mais acessível</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
