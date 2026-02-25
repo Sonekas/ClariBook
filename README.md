@@ -2,6 +2,8 @@
 
 Um programa web simples que permite aos usuários enviar arquivos EPUB, escolher entre 3 níveis de simplificação de texto, e baixar ou visualizar o livro convertido usando IA para reescrita.
 
+Demo (Render): https://claribook.onrender.com/
+
 ## Funcionalidades
 
 ### Principais Recursos
@@ -79,6 +81,12 @@ Um programa web simples que permite aos usuários enviar arquivos EPUB, escolher
    http://localhost:5000
    ```
 
+## Variáveis de ambiente
+
+- **HF_TOKEN** (obrigatório): token da Hugging Face para usar a Inference API.
+- **FAST_MODE** (opcional): defina como `1` para reduzir custo/tempo (menor qualidade).
+- **MAX_WORKERS** (opcional): número de workers para processar capítulos em paralelo.
+
 ## Como Usar
 
 ### Passo a Passo
@@ -121,7 +129,6 @@ epub-simplifier/
 │   │   ├── index.html         # Interface principal
 │   │   ├── styles.css         # Estilos CSS
 │   │   └── script.js          # JavaScript frontend
-├── venv/                      # Ambiente virtual Python
 ├── requirements.txt           # Dependências Python
 └── README.md                 # Esta documentação
 ```
@@ -226,7 +233,7 @@ Para contribuir com o projeto:
 1. Faça um fork do repositório
 2. Crie uma branch para sua feature
 3. Implemente suas mudanças
-4. Teste thoroughly
+4. Teste bem antes de enviar
 5. Submeta um pull request
 
 ## Licença
