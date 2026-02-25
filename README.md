@@ -10,7 +10,7 @@ Um programa web simples que permite aos usuários enviar arquivos EPUB, escolher
   1. **Muito Simples**: Frases curtas e vocabulário acessível
   2. **Médio**: Linguagem clara mantendo parte da riqueza literária
   3. **Comum**: Pequenas simplificações para melhorar fluidez
-- **Processamento com IA**: Utiliza OpenAI GPT-3.5-turbo para reescrita inteligente
+- **Processamento com IA**: Utiliza Hugging Face Inference API para reescrita
 - **Interface Moderna**: Design responsivo e intuitivo
 - **Monitoramento de Progresso**: Acompanhamento em tempo real do processamento
 - **Download Direto**: Baixe o EPUB simplificado diretamente
@@ -20,7 +20,7 @@ Um programa web simples que permite aos usuários enviar arquivos EPUB, escolher
 #### Backend
 - **Flask**: Framework web Python
 - **ebooklib**: Biblioteca para manipulação de arquivos EPUB
-- **OpenAI API**: Integração com GPT-3.5-turbo para simplificação de texto
+- **Hugging Face Inference API**: Reescrita do texto
 - **BeautifulSoup4**: Parsing de conteúdo HTML
 - **Flask-CORS**: Suporte a requisições cross-origin
 
@@ -33,7 +33,7 @@ Um programa web simples que permite aos usuários enviar arquivos EPUB, escolher
 
 ### Pré-requisitos
 - Python 3.11+
-- Conta OpenAI com API key
+- Token da Hugging Face (HF_TOKEN)
 
 ### Passos de Instalação
 
@@ -60,13 +60,13 @@ Um programa web simples que permite aos usuários enviar arquivos EPUB, escolher
    pip install -r requirements.txt
    ```
 
-4. **Configure a API Key do OpenAI**
+4. **Configure o token da Hugging Face**
    ```bash
    # Linux/Mac
-   export OPENAI_API_KEY="sua-api-key-aqui"
+   export HF_TOKEN="seu-token-aqui"
    
    # Windows
-   set OPENAI_API_KEY=sua-api-key-aqui
+   set HF_TOKEN=seu-token-aqui
    ```
 
 5. **Execute a aplicação**
@@ -113,17 +113,14 @@ Um programa web simples que permite aos usuários enviar arquivos EPUB, escolher
 epub-simplifier/
 ├── src/
 │   ├── main.py                 # Arquivo principal do Flask
-│   ├── models/                 # Modelos de dados
 │   ├── routes/
-│   │   ├── user.py            # Rotas de usuário (template)
 │   │   └── epub_processor.py   # Rotas de processamento EPUB
 │   ├── services/
-│   │   └── ai_simplifier.py   # Serviço de simplificação com IA
+│   │   └── hf_simplifier.py   # Serviço de simplificação via Hugging Face
 │   ├── static/
 │   │   ├── index.html         # Interface principal
 │   │   ├── styles.css         # Estilos CSS
 │   │   └── script.js          # JavaScript frontend
-│   └── database/              # Banco de dados SQLite
 ├── venv/                      # Ambiente virtual Python
 ├── requirements.txt           # Dependências Python
 └── README.md                 # Esta documentação
@@ -190,62 +187,19 @@ GET /api/epub/download/{output_filename}
 Resposta: Arquivo EPUB simplificado
 ```
 
-## Configurações Avançadas
-
-### Personalização dos Prompts de IA
-
-Os prompts para cada nível de simplificação podem ser editados no arquivo `src/services/ai_simplifier.py`:
-
-```python
-self.prompts = {
-    1: {
-        "name": "Muito Simples",
-        "system": "Seu prompt personalizado aqui...",
-        "user": "Reescreva este trecho..."
-    },
-    # ... outros níveis
-}
-```
-
-### Configuração de Chunks
-
-O tamanho dos blocos de texto processados pode ser ajustado:
-
-```python
-# Em ai_simplifier.py
-def simplify_chapter(self, chapter_content: str, level: int, max_chunk_words: int = 1500):
-```
-
-### Configuração do Modelo de IA
-
-Para usar um modelo diferente, edite em `ai_simplifier.py`:
-
-```python
-response = self.client.chat.completions.create(
-    model="gpt-4",  # Altere aqui
-    messages=[...],
-    max_tokens=4000,
-    temperature=0.3
-)
-```
-
 ## Solução de Problemas
 
 ### Erros Comuns
 
-1. **"ModuleNotFoundError: No module named 'openai'"**
-   - Certifique-se de que o ambiente virtual está ativado
-   - Execute: `pip install -r requirements.txt`
-
-2. **"Bad Zip file"**
+1. **"Bad Zip file"**
    - O arquivo EPUB está corrompido ou não é um EPUB válido
    - Tente com outro arquivo EPUB
 
-3. **"Erro de conexão durante o processamento"**
+2. **"Erro de conexão durante o processamento"**
    - Verifique sua conexão com a internet
-   - Confirme se a API key do OpenAI está configurada corretamente
+   - Confirme se a variável `HF_TOKEN` está configurada corretamente
 
-4. **Processamento muito lento**
+3. **Processamento muito lento**
    - Arquivos grandes podem levar tempo
    - Considere usar um modelo mais rápido ou reduzir o tamanho dos chunks
 
@@ -262,7 +216,7 @@ logging.basicConfig(level=logging.DEBUG)
 
 - **Tamanho de arquivo**: Arquivos muito grandes podem causar timeout
 - **Idioma**: Otimizado para textos em português
-- **Custo da API**: Uso intensivo pode gerar custos significativos na OpenAI
+- **Custo da API**: Uso intensivo pode gerar custos dependendo do provedor
 - **Formatação**: Algumas formatações complexas podem ser perdidas
 
 ## Contribuição
@@ -288,5 +242,4 @@ Para dúvidas ou problemas:
 
 ---
 
-**Desenvolvido com Flask, OpenAI e muito ☕**
-
+**Desenvolvido com Flask e muito ☕**
