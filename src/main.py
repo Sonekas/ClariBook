@@ -9,6 +9,25 @@ from src.routes.user import user_bp
 from src.routes.epub_processor import epub_bp
 
 
+def _sqlite_uri_for_env(base_dir: str) -> str:
+    env_db = (os.getenv('DATABASE_URL') or '').strip()
+    if env_db:
+        return env_db
+
+    preferred_dir = os.path.join(base_dir, 'database')
+    try:
+        os.makedirs(preferred_dir, exist_ok=True)
+        test_path = os.path.join(preferred_dir, '.write_test')
+        with open(test_path, 'w', encoding='utf-8') as f:
+            f.write('ok')
+        os.remove(test_path)
+        return f"sqlite:///{os.path.join(preferred_dir, 'app.db')}"
+    except Exception:
+        fallback_dir = os.path.join('/tmp', 'epub_simplifier_db')
+        os.makedirs(fallback_dir, exist_ok=True)
+        return f"sqlite:///{os.path.join(fallback_dir, 'app.db')}"
+
+
 def create_app() -> Flask:
     base_dir = os.path.dirname(__file__)
     app = Flask(__name__, static_folder=os.path.join(base_dir, 'static'))
@@ -25,8 +44,7 @@ def create_app() -> Flask:
     app.register_blueprint(user_bp, url_prefix='/api')
     app.register_blueprint(epub_bp, url_prefix='/api/epub')
 
-    # Configuração de banco de dados SQLite (fallback local)
-    app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(base_dir, 'database', 'app.db')}"
+    app.config['SQLALCHEMY_DATABASE_URI'] = _sqlite_uri_for_env(base_dir)
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     db.init_app(app)
