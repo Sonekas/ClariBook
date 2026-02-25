@@ -22,9 +22,7 @@ const progressStats = document.getElementById('progressStats');
 const downloadBtn = document.getElementById('downloadBtn');
 const errorMessage = document.getElementById('errorMessage');
 
-const API_BASE = window.location.port === '5000'
-    ? window.location.origin
-    : (window.location.hostname ? `http://${window.location.hostname}:5000` : 'http://127.0.0.1:5000');
+const API_BASE = window.location.origin || 'http://127.0.0.1:5000';
 
 async function readResponseData(response) {
     const contentType = response.headers.get('content-type') || '';
