@@ -1,54 +1,68 @@
 import os
 import logging
-import sys
-# DON'T CHANGE THIS !!!
-sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
 from flask import Flask, send_from_directory
 from flask_cors import CORS
+
 from src.models.user import db
 from src.routes.user import user_bp
 from src.routes.epub_processor import epub_bp
 
-app = Flask(__name__, static_folder=os.path.join(os.path.dirname(__file__), 'static'))
-app.config['SECRET_KEY'] = 'asdf#FGSgvasgf$5$WGT'
-logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(name)s %(message)s')
 
-# Habilitar CORS para todas as rotas
-CORS(app)
+def create_app() -> Flask:
+    base_dir = os.path.dirname(__file__)
+    app = Flask(__name__, static_folder=os.path.join(base_dir, 'static'))
 
-app.register_blueprint(user_bp, url_prefix='/api')
-app.register_blueprint(epub_bp, url_prefix='/api/epub')
+    # Secret key should come from environment in production; keep fallback for local dev
+    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret')
 
-# uncomment if you need to use database
-app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(os.path.dirname(__file__), 'database', 'app.db')}"
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db.init_app(app)
-with app.app_context():
-    db.create_all()
+    logging.basicConfig(level=logging.INFO, format='%(asctime)s %(levelname)s %(name)s %(message)s')
+
+    # Habilitar CORS para todas as rotas
+    CORS(app)
+
+    # Registrar blueprints
+    app.register_blueprint(user_bp, url_prefix='/api')
+    app.register_blueprint(epub_bp, url_prefix='/api/epub')
+
+    # Configuração de banco de dados SQLite (fallback local)
+    app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(base_dir, 'database', 'app.db')}"
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+    db.init_app(app)
+    with app.app_context():
+        db.create_all()
+
+    return app
+
+
+app = create_app()
+
 
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
-def serve(path):
+def serve(path: str):
     static_folder_path = app.static_folder
-    if static_folder_path is None:
-            return "Static folder not configured", 404
+    if not static_folder_path:
+        return "Static folder not configured", 404
 
-    if path != "" and os.path.exists(os.path.join(static_folder_path, path)):
+    requested = os.path.join(static_folder_path, path)
+    if path and os.path.exists(requested):
         return send_from_directory(static_folder_path, path)
-    else:
-        index_path = os.path.join(static_folder_path, 'index.html')
-        if os.path.exists(index_path):
-            return send_from_directory(static_folder_path, 'index.html')
-        else:
-            return "index.html not found", 404
+
+    index_path = os.path.join(static_folder_path, 'index.html')
+    if os.path.exists(index_path):
+        return send_from_directory(static_folder_path, 'index.html')
+
+    return "index.html not found", 404
+
 
 @app.route('/api/health')
 def health():
     return {
         "status": "ok",
         "backend": "hf",
-        "model": "meta-llama/Meta-Llama-3.1-8B-Instruct"
+        "model": "meta-llama/Meta-Llama-3.1-8B-Instruct",
     }
 
 

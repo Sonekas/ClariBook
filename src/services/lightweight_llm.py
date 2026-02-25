@@ -1,21 +1,21 @@
-import os
-import time
-from typing import List, Dict
+import logging
 import re
+from typing import List, Dict
+
+logger = logging.getLogger(__name__)
+
 
 class LightweightLLMSimplifier:
-    """
-    Simplificador baseado em regras e padrões para ambientes com recursos limitados.
+    """Simplificador baseado em regras e padrões para ambientes com recursos limitados.
     Simula um LLM local usando técnicas de processamento de linguagem natural.
     """
-    
-    def __init__(self):
+
+    def __init__(self) -> None:
         self.device = "cpu"
         self.model_name = "lightweight-rule-based"
-        
+
         # Dicionário de simplificação de palavras
-        self.word_simplifications = {
-            # Palavras complexas -> palavras simples
+        self.word_simplifications: Dict[str, str] = {
             "contemplar": "olhar",
             "observar": "ver",
             "perscrutar": "examinar",
@@ -59,31 +59,23 @@ class LightweightLLMSimplifier:
             "entretanto": "mas",
             "porém": "mas",
             "senão": "mas",
-            "outrossim": "também",
             "igualmente": "também",
             "semelhantemente": "da mesma forma",
-            "analogamente": "da mesma forma"
+            "analogamente": "da mesma forma",
         }
-        
+
         # Padrões de simplificação sintática
         self.syntax_patterns = [
-            # Substituir construções passivas por ativas quando possível
             (r'foi (\w+)do por', r'o \1'),
             (r'foram (\w+)dos por', r'os \1'),
             (r'era (\w+)do por', r'o \1'),
             (r'eram (\w+)dos por', r'os \1'),
-            
-            # Simplificar construções com gerúndio
             (r'estava (\w+)ndo', r'\1va'),
             (r'estavam (\w+)ndo', r'\1vam'),
-            
-            # Simplificar construções arcaicas
             (r'há de (\w+)', r'vai \1'),
             (r'hão de (\w+)', r'vão \1'),
             (r'houve (\w+)', r'teve \1'),
             (r'houvera (\w+)', r'tinha \1'),
-            
-            # Simplificar pronomes oblíquos
             (r'(\w+)-lhe', r'lhe \1'),
             (r'(\w+)-me', r'me \1'),
             (r'(\w+)-te', r'te \1'),
@@ -91,40 +83,29 @@ class LightweightLLMSimplifier:
             (r'(\w+)-vos', r'vos \1'),
             (r'(\w+)-se', r'se \1'),
         ]
-        
-        # Prompts para cada nível
-        self.prompts = {
-            1: {
-                "name": "Muito Simples",
-                "description": "Frases curtas, vocabulário básico"
-            },
-            2: {
-                "name": "Médio", 
-                "description": "Linguagem clara, mantendo elegância"
-            },
-            3: {
-                "name": "Comum",
-                "description": "Pequenos ajustes para fluidez"
-            }
+
+        # Prompts para cada nível (descrições apenas)
+        self.prompts: Dict[int, Dict[str, str]] = {
+            1: {"name": "Muito Simples", "description": "Frases curtas, vocabulário básico"},
+            2: {"name": "Médio", "description": "Linguagem clara, mantendo elegância"},
+            3: {"name": "Comum", "description": "Pequenos ajustes para fluidez"},
         }
-        
-        print(f"Simplificador leve inicializado (baseado em regras)")
-    
+
+        logger.info("Simplificador leve inicializado (baseado em regras)")
+
     def simplify_text(self, text: str, level: int) -> str:
         """Simplifica texto usando regras baseadas no nível"""
         if level not in [1, 2, 3]:
             raise ValueError(f"Nível {level} não é válido. Use 1, 2 ou 3.")
-        
+
         simplified = text
-        
-        # Aplicar simplificações baseadas no nível
-        if level == 1:  # Muito simples
+        if level == 1:
             simplified = self._apply_heavy_simplification(simplified)
-        elif level == 2:  # Médio
+        elif level == 2:
             simplified = self._apply_medium_simplification(simplified)
-        elif level == 3:  # Comum
+        elif level == 3:
             simplified = self._apply_light_simplification(simplified)
-        
+
         return simplified
     
     def _apply_heavy_simplification(self, text: str) -> str:

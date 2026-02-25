@@ -4,6 +4,10 @@ from typing import Optional
 import subprocess
 import time
 import shutil
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 class OllamaSimplifier:
     def __init__(self, host: Optional[str] = None, model: Optional[str] = None, timeout: int = 120):
@@ -12,48 +16,42 @@ class OllamaSimplifier:
         self.timeout = timeout
 
     def is_available(self) -> bool:
-        """Verifica se o serviço do Ollama está respondendo."""
         try:
-            # Tenta ping no endpoint raiz (retorna texto simples)
             r = requests.get(self.host + '/', timeout=3)
             if r.status_code == 200:
                 return True
         except Exception:
-            pass
+            logger.debug('Ollama ping falhou para %s', self.host)
         try:
-            # Tenta listar modelos como segunda opção
             r = requests.get(self.host + '/api/tags', timeout=3)
             return r.status_code == 200
         except Exception:
+            logger.debug('Consulta /api/tags falhou para %s', self.host)
             return False
 
     def ensure_available(self) -> bool:
         try:
             if self.is_available():
                 return True
-            # Tenta iniciar serviço automaticamente
             if shutil.which("ollama") is None:
+                logger.warning('Comando ollama não encontrado; não é possível iniciar servidor')
                 return False
             try:
-                subprocess.Popen(
-                    ["ollama", "serve"],
-                    stdout=subprocess.DEVNULL,
-                    stderr=subprocess.DEVNULL,
-                    shell=False,
-                    creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0)
-                )
+                subprocess.Popen(["ollama", "serve"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, shell=False,
+                                 creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
             except Exception:
                 try:
                     subprocess.Popen(["ollama", "serve"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
                 except Exception:
+                    logger.exception('Falha ao iniciar comando ollama')
                     return False
-            # Aguarda subir
             for _ in range(10):
                 time.sleep(0.6)
                 if self.is_available():
                     return True
             return False
         except Exception:
+            logger.exception('Erro em ensure_available')
             return False
 
     def _build_prompt(self, text: str, level: int, preserve_structure: bool = False) -> str:
@@ -81,28 +79,23 @@ class OllamaSimplifier:
             " Preserve a estrutura e os parágrafos sempre que possível."
         )
         instruction = level_instructions.get(level, level_instructions[3]) + suffix
-        return (
-            f"{instruction}\n\nTexto original:\n{text}\n\nTexto simplificado:" 
-        )
+        return f"{instruction}\n\nTexto original:\n{text}\n\nTexto simplificado:"
 
     def simplify_text(self, text: str, level: int, preserve_structure: bool = False) -> str:
         payload = {
             'model': self.model,
             'prompt': self._build_prompt(text, level, preserve_structure=preserve_structure),
             'stream': False,
-            'options': {
-                'temperature': 0.4,
-            }
+            'options': {'temperature': 0.4}
         }
         url = f"{self.host}/api/generate"
         try:
             resp = requests.post(url, json=payload, timeout=self.timeout)
             resp.raise_for_status()
             data = resp.json()
-            # Ollama retorna {'response': '...'} quando stream=False
             return data.get('response', text).strip() or text
         except Exception:
-            # Em caso de erro, retorna o próprio texto para não interromper o fluxo
+            logger.exception('Erro simplificando via Ollama')
             return text
 
 

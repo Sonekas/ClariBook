@@ -1,7 +1,6 @@
 import os
 import logging
 import tempfile
-import zipfile
 from flask import Blueprint, request, jsonify, send_file
 from werkzeug.utils import secure_filename
 import ebooklib
@@ -62,19 +61,8 @@ def extract_text_from_epub(epub_path):
     
     return chapters
 
-def split_text_into_chunks(text, max_words=1500):
-    """Divide texto em chunks menores para processamento"""
-    words = text.split()
-    # Tratar páginas com texto mínimo (ex.: capa, páginas só com imagens)
-    if len(words) < 5:
-        return []
-    chunks = []
-    
-    for i in range(0, len(words), max_words):
-        chunk = ' '.join(words[i:i + max_words])
-        chunks.append(chunk)
-    
-    return chunks
+# split_text_into_chunks removed (não utilizado). Usamos _split_words_with_overlap.
+
 
 def create_epub_from_chapters(chapters, original_epub_path, output_path, title_suffix=""):
     """Cria um novo EPUB a partir dos capítulos processados"""
@@ -191,8 +179,7 @@ def write_simplified_epub_preserving_structure(chapters, original_epub_path, out
                 body = soup.find('body') or soup
 
                 # Heading original (h1/h2/h3) é mantido
-                heading_tag = soup.find(['h1', 'h2', 'h3'])
-                original_heading = heading_tag.get_text(strip=True) if heading_tag else None
+                # Mantemos headings no HTML original, não é necessário extrair texto aqui
 
                 # Texto simplificado para este documento
                 simplified_text = simplified_by_id.get(item.get_id())
@@ -233,8 +220,13 @@ def write_simplified_epub_preserving_structure(chapters, original_epub_path, out
                 # Gravar conteúdo atualizado
                 item.set_content(str(soup).encode('utf-8'))
             except Exception:
-                # Em caso de falha, deixa o item original intacto
-                pass
+                logger.exception("Falha ao substituir conteúdo do item %s; mantendo original.", getattr(item, 'id', None))
+                # Mantém o conteúdo original sem sobrescrever
+                try:
+                    item.set_content(html.encode('utf-8'))
+                except Exception:
+                    # se nem isso for possível, seguir adiante
+                    logger.debug("Não foi possível restaurar conteúdo original do item %s", getattr(item, 'id', None))
 
     # Salvar EPUB preservando estrutura original e capa/imagens
     epub.write_epub(output_path, book, {})
@@ -465,7 +457,6 @@ def process_epub_with_ai(file_id, original_path, simplification_level):
                 })
         output_filename = f"{file_id}_simplified_level_{simplification_level}.epub"
         output_path = os.path.join(PROCESSED_FOLDER, output_filename)
-        output_path = os.path.join(PROCESSED_FOLDER, output_filename)
 
         processing_status[file_id].update({
             'message': 'Gerando EPUB final...',
@@ -585,7 +576,6 @@ def get_status(file_id):
 
 
 # Utilitários de checkpoint/resumo
-import hashlib
 
 
 def _get_checkpoint_dir(file_id: str) -> str:
@@ -615,9 +605,5 @@ def _save_json(path: str, data: dict):
         pass
 
 
-def _hash_chunk(text: str, level: int) -> str:
-    h = hashlib.sha256()
-    h.update(f"{level}|".encode('utf-8'))
-    h.update(text.encode('utf-8'))
-    return h.hexdigest()
+# _hash_chunk removido (não utilizado)
 
